@@ -25,6 +25,8 @@ while True:
     # 예를들어 n = 17 , k = 6 일때 target 은 12가 된다. 즉 17에서 12를 뺀 수가 n이 k로 나누어 떨어지게 하기 위해 1을 빼는 횟수이다.
     result += (n - target)
 
+    n = target
+
     # n이 k보다 작을때, 즉 나눌수 없을때 반복문 탈출.
     if n < k:
         break
