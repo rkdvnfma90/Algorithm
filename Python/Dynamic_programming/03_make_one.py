@@ -45,4 +45,5 @@ for i in range(2, x+1):
     if i % 5 == 0:
         d[i] = min(d[i], d[i // 5] + 1)
 
+# 정수 x의 연산횟수 출력
 print(d[x])
