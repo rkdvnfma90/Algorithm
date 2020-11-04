@@ -1,4 +1,4 @@
-"""
+/*
 무지의 먹방
 평소 식욕이 왕성한 무지는 자신의 재능을 뽐내고 싶어 졌고 고민 끝에 카카오 TV 라이브로 방송을 하기로 마음먹었다.
 
@@ -68,45 +68,66 @@ food_times / k / result
 그 다음부터는 소요시간이 가장 적은 음식은 없어지고, 그다음으로 적은 음식을 다 먹을때 까지 또 전체음식의 개수만큼 순회한다.
 순회가 되지 않으면 그때부터 몇번째 위치인지 확인하면 된다.
 
-"""
+잘 이해가 안됐던 점 or 내 풀이
+1. 맨처음엔 멍청하게도 왜 현재 걸리는 시간에서 이전에 걸렸던 시간을 빼는지 잘 이해가 안됐는데, 너무 멍청했음.
+예를들어 [4,6,10] 이런식으로 입력이 주어졌을때 4를 다 먹기위해선 총 4바퀴를 돌아야 함. 4바퀴 돌면서 당연히 다른 6 이나 10도
+4씩 감소하는데 멍청하게 이부분을 간과해버림.
 
-import heapq
+2. foods를 오름차순으로 정렬하여 foods.shift()를 사용했는데, 맨 앞의 요소부터 꺼내기 때문에 시간복잡도가 어마어마하게 증가했을 것.
+그래서 내림차순으로 정렬하고 foods.pop()을 사용하여 맨 끝의 요소부터 꺼내기 때문에 시간복잡도는 o(n). 
+이렇게 바꾸니 테스트 통과.
 
-def solution(food_times, k):
-    # 전체 음식을 먹는 시간보다 k가 크거나 같으면 -1 리턴한다.
-    # 이 의미는 시간이 남지만 더 먹을 음식이 없다는 뜻
-    if sum(food_times) <= k:
-        return -1
-    
-    # 시간이 작은 음식부터 뺴야 하므로 우선순위 큐를 이용한다.
-    q = []
-    for i in range(len(food_times)):
-        # (음식시간, 음식번호) 튜플로 힙에 삽입한다.
-        heapq.heappush(q, (food_times[i], i + 1))
-    
-    # 먹기위해 사용한 시간
-    sum_value = 0
-    # 직전에 다 먹은 음식 시간
-    previous = 0
-    # 남은 음식의 수
-    length = len(food_times)
+3. 
+*/
 
-    # 먹기위해 사용한 시간 + (현재의 음식시간 - 이전 음식 시간) * 현재 음식의 갯수를 k와 비교한다.
-    # 왜 현재의 음식시간에서 이전음식시간을 빼는지 -> 예를들어 [4,6,10] 이렇게 음식이 존재할때 4를 다 먹기위해선
-    # 4바퀴를 순회해야한다. 4바퀴 돌면서 당연히 6번의 횟수가 4가 감소된다.
-    while sum_value + ((q[0][0] - previous) * length) <= k:
-        # 가장 적은 시간이 걸리는 음식의 걸리는 시간
-        now = heapq.heappop(q)[0]
-        # 먹기위해 사용한 시간
-        sum_value += (now - previous) * length
-        # 다 먹은 음식은 제외한다
-        length -= 1
-        # 제외 하였으니 이제 이전 음식시간에는 현재 음식 시간을 다시 설정한다.
-        previous = now
-    
-    # 남은 음식 중에서 몇 번째 음식인지 확인하여 출력 
-    # 음식의 번호 기준으로 정렬한다.
-    result = sorted(q, key = lambda x : x[1])
-    return result[(k - sum_value) % length][1]
+function solution(food_times, k) {
+  let answer = 0;
+  let food_leng = food_times.length;
+  let foods = [];
+  let total = 0; // 모든 음식을 먹을때 걸리는 시간.
+  let sum_val = 0; // 음식을 먹을때 걸린 시간 누적값.
+  let previous_val = 0; // 이전 음식을 먹을때 걸린 시간.
 
+  for (let i = 0; i < food_times.length; i++) {
+    foods[i] = { time: food_times[i], number: i + 1 };
+    total += food_times[i];
+  }
 
+  // 먹을 음식이 없으면 -1 리턴 -> 즉, 네트워크 장애가 걸리는 k초 이전에 다 먹을 수 있으면.
+  if (total <= k) {
+    return -1;
+  }
+
+  // 걸리는 시간 기준으로 내림차순으로 정렬하여 끝에서부터 pop 한다.
+  foods.sort((a, b) => b.time - a.time);
+
+  /*
+  sum_val : 먹기위해 사용한 시간의 누적값
+  foods[foods.length - 1] : 내림차순으로 정렬되어 있어, 가장 작은 값을 뽑기위함 (현재의 값)
+  previous_val : 이전 음식을 먹을때 걸린 시간
+  food_leng : 현재 음식의 수
+
+  즉, 여태 누적된 값이 k 보다 커지면 반복문 탈출한다.
+  */
+  while (
+    sum_val + (foods[foods.length - 1].time - previous_val) * food_leng <=
+    k
+  ) {
+    // 최소값을 pop
+    let now = foods.pop();
+    // 먹기 위해 사용한 시간을 누적한다.
+    sum_val += (now.time - previous_val) * food_leng;
+    // 현재 음식을 모두 먹었기 때문에 1 감소 시킨다.
+    food_leng -= 1;
+    // 이전 값을 빼야 하기 때문에 현재 now를 이전값으로 설정해준다.
+    previous_val = now.time;
+  }
+
+  // 결과를 구하기 위하여 number 를 기준으로 다시 정렬 한다.
+  foods.sort((a, b) => a.number - b.number);
+
+  // 남은 음식중에서 몇번째 음식인지 확인하기 위해서 (k - sum_val) % food_leng 의 number 를 구한다.
+  answer = foods[(k - sum_val) % food_leng].number;
+
+  return answer;
+}
